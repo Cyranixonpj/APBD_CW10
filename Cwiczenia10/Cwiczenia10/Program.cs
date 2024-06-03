@@ -1,9 +1,24 @@
+using Cwiczenia10.Contexts;
+using Cwiczenia10.Exceptions;
+using Cwiczenia10.RequestModels;
+using Cwiczenia10.Services;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddDbContext<DataBaseContext>(opt =>
+{
+    opt.UseSqlServer(builder.Configuration.GetConnectionString("Default"));
+});
+builder.Services.AddScoped<IAccountsService, AccountsService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+
 
 var app = builder.Build();
 
@@ -15,30 +30,30 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
-var summaries = new[]
+app.MapGet("api/accounts/{accountId:int}", async (int accountId,IAccountsService service) =>
 {
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
 
-app.MapGet("/weatherforecast", () =>
+    try
     {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    summaries[Random.Shared.Next(summaries.Length)]
-                ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast")
-    .WithOpenApi();
+        return Results.Ok(await service.GetAccountByIdAsync(accountId));
+    }
+    catch (NotFoundException e)
+    {
+        return Results.NotFound(e.Message);
+    }
+});
+app.MapPost("/api/products", async (AddProductRequestModel productModel, IProductService service) =>
+{
+    try
+    {
+        return Results.Ok(await service.AddProductAsync(productModel));
+    }
+    catch (BadRequestException e)
+    {
+        return Results.BadRequest(e.Message);
+    }
+});
+
 
 app.Run();
 
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-{
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
-}
