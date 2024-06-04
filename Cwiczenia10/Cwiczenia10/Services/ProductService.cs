@@ -39,8 +39,8 @@ public class ProductService(DataBaseContext context) : IProductService
         {
             var productCategory = new ProductsCategories
             {
-                ProductId = product.ProductId,
-                CategoryId = catId.CategoryId
+               Products = product,
+               Categories = catId
             };
             await context.ProductsCategories.AddAsync(productCategory);
 
