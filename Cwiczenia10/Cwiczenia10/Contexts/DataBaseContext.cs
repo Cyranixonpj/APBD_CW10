@@ -94,9 +94,5 @@ public class DataBaseContext : DbContext
             new ShoppingCarts { AccountId = 1, ProductId = 2, Amount = 2 },
             new ShoppingCarts { AccountId = 2, ProductId = 2, Amount = 1 }
         );
-        
-        
-        
-        
     }
 }

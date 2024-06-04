@@ -24,8 +24,7 @@ public class ProductService(DataBaseContext context) : IProductService
             Depth = model.ProductDepth,
         };
 
-        await context.Products.AddAsync(product);
-        await context.SaveChangesAsync();
+       
         var categories = await context.Categories
             .Where(c => model.ProductCategories.Contains(c.CategoryId))
             .ToListAsync();
@@ -36,18 +35,18 @@ public class ProductService(DataBaseContext context) : IProductService
             throw new NotFoundException($"There is no such category with id: {string.Join(", ", notFoundCategories)}");
         }
 
-        foreach (var catId in model.ProductCategories)
+        foreach (var catId in categories)
         {
             var productCategory = new ProductsCategories
             {
                 ProductId = product.ProductId,
-                CategoryId = catId
+                CategoryId = catId.CategoryId
             };
             await context.ProductsCategories.AddAsync(productCategory);
 
         }
         
-        
+        await context.Products.AddAsync(product);
         await context.SaveChangesAsync();
 
         return model;

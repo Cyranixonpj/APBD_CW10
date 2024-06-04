@@ -2,6 +2,7 @@ using Cwiczenia10.Contexts;
 using Cwiczenia10.Exceptions;
 using Cwiczenia10.RequestModels;
 using Cwiczenia10.Services;
+using Cwiczenia10.Validators;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -44,9 +45,18 @@ app.MapGet("api/accounts/{accountId:int}", async (int accountId,IAccountsService
 });
 app.MapPost("/api/products", async (AddProductRequestModel productModel, IProductService service) =>
 {
+
+    var validator = new AddProductValidator();
+    var validate = validator.Validate(productModel);
+
+    if (!validate.IsValid)
+    {
+        return Results.BadRequest("Invalid data");
+    }
     try
     {
-        return Results.Ok(await service.AddProductAsync(productModel));
+        await service.AddProductAsync(productModel);
+        return Results.Created($"/api/products/{productModel.ProductName}", productModel);
     }
     catch (BadRequestException e)
     {
